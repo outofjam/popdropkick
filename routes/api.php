@@ -23,6 +23,9 @@ Route::get('/promotions/{identifier}/wrestlers', [PromotionController::class, 'w
 
 Route::get('/championships', [ChampionshipController::class, 'index']);
 Route::get('/championships/{identifier}', [ChampionshipController::class, 'show'])->name('championships.show');
+Route::get('/championships/{identifier}/title-reigns', [TitleReignController::class, 'index'])->name('championships.title-reigns.index');
+
+Route::get('/title-reigns/{reign}', [TitleReignController::class, 'show'])->name('title-reigns.show');
 
 // Change request routes (for moderators/admins)
 Route::middleware(['auth:sanctum'])->group(function () {

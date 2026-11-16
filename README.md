@@ -100,7 +100,13 @@ For most create/update endpoints, whether the change applies immediately or goes
 
 ### Title Reigns
 
-Title reigns don't have standalone list/show endpoints - they're read as part of a wrestler's or championship's detail response (`title_reigns`, `active_title_reigns`). Writes are scoped under a wrestler or by reign ID:
+Title reigns are also embedded in a wrestler's and championship's detail response (`title_reigns`, `active_title_reigns`). For long lineages use the paginated per-championship list below. There is intentionally no global `GET /api/title-reigns` index - every real query starts from a championship or wrestler.
+
+- `GET /api/championships/{id_or_slug}/title-reigns`
+  Paginated list of a championship's title reigns, oldest first. Supports `per_page` plus the filters `wrestler_id`, `win_type`, `current` (`true` for the open reign, `false` for ended reigns), `vacated` (`true` for reigns that ended by vacancy, i.e. `vacancy_reason` is set), `won_on_from` and `won_on_to`.
+
+- `GET /api/title-reigns/{reign}`
+  Retrieve a single title reign with its championship, team and participants. Each reign carries a `status` of `current`, `ended` or `vacated`.
 
 - `POST /api/wrestlers/{wrestler}/title-reigns` — **Auth required**
   Record a new title reign for a wrestler. The wrestler in the URL is always a participant; for a tag team, trios, or stable reign, pass additional co-champions via `participants` (and optionally `team_id` to label the group) - see [Multi-Champion Title Reigns](#multi-champion-title-reigns-tag-teams-trios-stables) below.

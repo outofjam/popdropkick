@@ -8,10 +8,71 @@ use App\Models\Championship;
 use App\Models\TitleReign;
 use App\Models\TitleReignWrestler;
 use App\Models\Wrestler;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 
 class TitleReignService
 {
+    /**
+     * A championship's reigns, oldest first, with the full detail graph.
+     *
+     * Supported $filters: wrestler_id, win_type, current (bool),
+     * vacated (bool), won_on_from, won_on_to.
+     */
+    public function paginateForChampionship(Championship $championship, array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        $query = TitleReign::query()
+            ->where('championship_id', $championship->id)
+            ->with($this->detailWith())
+            ->orderBy('won_on')
+            ->orderBy('id');
+
+        $this->applyFilters($query, $filters);
+
+        return $query->paginate($perPage)->withQueryString();
+    }
+
+    /**
+     * A single reign with the full detail graph.
+     */
+    public function loadDetail(TitleReign $reign): TitleReign
+    {
+        return $reign->load($this->detailWith());
+    }
+
+    private function applyFilters(Builder $query, array $filters): void
+    {
+        if (isset($filters['wrestler_id'])) {
+            $wrestlerId = $filters['wrestler_id'];
+
+            $query->where(fn (Builder $q) => $q
+                ->where('wrestler_id', $wrestlerId)
+                ->orWhereHas('titleReignWrestlers', fn (Builder $p) => $p->where('wrestler_id', $wrestlerId))
+            );
+        }
+
+        if (isset($filters['win_type'])) {
+            $query->where('win_type', $filters['win_type']);
+        }
+
+        if (array_key_exists('current', $filters)) {
+            $filters['current'] ? $query->whereNull('lost_on') : $query->whereNotNull('lost_on');
+        }
+
+        if (array_key_exists('vacated', $filters)) {
+            $filters['vacated'] ? $query->whereNotNull('vacancy_reason') : $query->whereNull('vacancy_reason');
+        }
+
+        if (isset($filters['won_on_from'])) {
+            $query->whereDate('won_on', '>=', $filters['won_on_from']);
+        }
+
+        if (isset($filters['won_on_to'])) {
+            $query->whereDate('won_on', '<=', $filters['won_on_to']);
+        }
+    }
+
     public function storeForWrestler(array $data, Wrestler $wrestler): TitleReign
     {
         // Default alias to primary if omitted
@@ -65,7 +126,7 @@ class TitleReignService
 
     /**
      * Championship + alias/wrestler fallback chain, plus the full
-     * participant/team graph, used by the store/update responses.
+     * participant/team graph, used by every TitleReignResource response.
      */
     private function detailWith(): array
     {
