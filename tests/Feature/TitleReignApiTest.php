@@ -33,11 +33,10 @@ class TitleReignApiTest extends TestCase
 
         $response = $this->postJson("/api/wrestlers/{$wrestler->slug}/title-reigns", $payload);
 
-        $response->assertStatus(201);
-        $response->assertJsonFragment([
-            'wrestler_id' => $wrestler->id,
-            'championship_id' => $championship->id,
-        ]);
+        $response->assertStatus(201)
+            ->assertJsonPath('data.championship.id', $championship->id)
+            ->assertJsonPath('data.wrestlers.0.wrestler.id', $wrestler->id)
+            ->assertJsonPath('data.status', 'ended');
 
     }
 

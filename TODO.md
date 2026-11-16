@@ -16,7 +16,8 @@
 
 - [x] Handle vacated titles more explicitly, including detailed reasons (`vacancy_reason`)
 - [x] Support multi-title reigns where one wrestler holds multiple championships simultaneously
-- [ ] Add pagination and filtering for title reigns — moot until there's a standalone title-reigns list endpoint; currently reigns are only readable nested under a wrestler's or championship's `show` response
+- [x] Add pagination and filtering for title reigns — `GET /api/championships/{id_or_slug}/title-reigns` (#20, #30)
+- [ ] Global `GET /api/title-reigns` index — deliberately skipped in #30 until there's a consumer that needs cross-championship filtering
 - [ ] Add endpoints for match histories or event data
 
 ## Bugs / Fixes
